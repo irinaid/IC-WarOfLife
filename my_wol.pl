@@ -38,4 +38,14 @@ update_score(Winner, R, B, D) :-
     ((Winner == d) -> (D is 1);
      (Winner == s) -> (D is 1);(D is 0)).
     
-    
+%% SKELETON DESIGN OF ALGORITHM FOR STRATEGIES
+%blood_lust(Board, Best_Move) :-
+%    find_best_move(Board, blood_lust_assess_move, Best_Move).
+
+%find_best_move(Board, assess_move_function, Best_Move) :-
+%    setof((Score, Move), assess_move_function(Board,Move,Score),Result),
+%    Best_Move = get_head(Result).
+
+%blood_lust_assess_move(Board, Move, Score) :-
+%    make_move(Board, Move, New_Board),
+%    Score is number_of_opponents(Board) - number_of_opponents(New_Board).
