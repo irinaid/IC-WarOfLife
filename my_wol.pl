@@ -36,7 +36,52 @@ update_score(Winner, B, R, D) :-
     ((Winner == b) -> (B is 1); (B is 0)),
     ((Winner == d) -> (D is 1);
      (Winner == s) -> (D is 1);(D is 0)).
-    
+
+in_range(Min,Max,Min) :- Min =< Max.
+in_range(Min,Max,N) :-
+   Min < Max,
+   MinX is Min+1,
+   in_range(MinX,Max,N).
+
+
+possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
+  findall([X, Y, NewX, NewY],
+         (member([X,Y], CurrentPlayer),
+          in_range(1, 8, NewX),
+          in_range(1, 8, NewY),
+          neighbour_position(X, Y, [NewX, NewY]),
+           \+ member([NewX, NewY], CurrentPlayer),
+           \+ member([NewX, NewY], OtherPlayer)),
+          Moves).
+
+move(OldPos, NewPos, [B, R], [B, NewR]) :-
+  member(OldPos, R),
+  delete(R, OldPos, IntermediateR),
+  append([NewPos], IntermediateR, NewR).
+move(OldPos, NewPos, [B, R], [NewB, R]) :-
+  member(OldPos, B),
+  delete(B, OldPos, IntermediateB),
+  append([NewPos], IntermediateB, NewB).
+
+bloodlust(r, [B, R], [NewB, NewR], [R1, C1, R2, C2]) :-
+  setof([N, R1, C1, R2, C2],
+         (member([R1, C1, R2, C2], PossMoves),
+          possible_moves(R, B, PossMoves),
+          move([R1, C1], [R2, C2], [B, R], IntBoard),
+          next_generation(IntBoard, [NB, _]),
+          N = length(NB)
+         ),
+        List),
+  move([X, Y], [NewX, NewY], [B, R], [NewB, NewR]),
+  last(List,[_, X, Y, NewX, NewY]).
+
+min_moves([], []). 
+min_moves([[_, R1, C1, R2, C2]], [R1, C1, R2, C2]).
+min_moves([[N, R1, C1, R2, C2], [M, R21, C21, R22, C22] | T], Res) :-
+  (N < M) -> min_moves([[N, R1, C1, R2, C2] | T], Res); 
+              min_moves([[M, R21, C21, R22, C22] | T], Res).
+
+
 %% SKELETON DESIGN OF ALGORITHM FOR STRATEGIES
 %blood_lust(Board, Best_Move) :-
 %    find_best_move(Board, blood_lust_assess_move, Best_Move).
