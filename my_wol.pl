@@ -50,10 +50,41 @@ possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
           in_range(1, 8, NewX),
           in_range(1, 8, NewY),
           neighbour_position(X, Y, [NewX, NewY]),
-           \+ member([NewX, NewY], CurrentPlayer),
-           \+ member([NewX, NewY], OtherPlayer)),
+          \+ member([NewX, NewY], CurrentPlayer),
+          \+ member([NewX, NewY], OtherPlayer)
+       %   alter_board([X, Y, NewX, NewY], [B, R], IntBoard),
+       %  next_generation(IntBoard, [NewB, _]),
+       %  length(NewB, N)
+         ),
           Moves).
 
+find_best_move(r, [B, R], Moves, Best_Move) :-
+  possible_moves(R, B, Moves),
+  forall( 
+         member([X, Y, NewX, NewY], Moves),
+         (
+          member([N, X, Y, NewX, NewY], Best_Move),
+          alter_board([X, Y, NewX, NewY], [B, R], IntBoard),
+          next_generation(IntBoard, [NewB, _]),
+          length(NewB, N)
+         )
+        ).
+%  min_moves(MovesLengths, Best_Move).
+
+forall(P, Q) :- \+ ( call(P), \+ call(Q) ).
+
+/*
+for_all( List<Moves> moves, List<(Score,Move)> scoredMoves)
+{
+	while(move[i++] != end of list)
+	{
+		score = assess(move[i]);
+		scoredMoves.add((score, move[i]));
+	}
+	
+}
+*/
+/*
 move(OldPos, NewPos, [B, R], [B, NewR]) :-
   member(OldPos, R),
   delete(R, OldPos, IntermediateR),
@@ -62,12 +93,12 @@ move(OldPos, NewPos, [B, R], [NewB, R]) :-
   member(OldPos, B),
   delete(B, OldPos, IntermediateB),
   append([NewPos], IntermediateB, NewB).
-
+*/
 bloodlust(r, [B, R], [NewB, NewR], [R1, C1, R2, C2]) :-
   setof([N, R1, C1, R2, C2],
          (member([R1, C1, R2, C2], PossMoves),
           possible_moves(R, B, PossMoves),
-          move([R1, C1], [R2, C2], [B, R], IntBoard),
+          alter_board([R1, C1, R2, C2], [B, R], IntBoard),
           next_generation(IntBoard, [NB, _]),
           N = length(NB)
          ),
@@ -92,4 +123,4 @@ min_moves([[N, R1, C1, R2, C2], [M, R21, C21, R22, C22] | T], Res) :-
 
 %blood_lust_assess_move(Board, Move, Score) :-
 %    make_move(Board, Move, New_Board),
-%    Score is number_of_opponents(Board) - number_of_opponents(New_Board).
+%    Score is 64 - number_of_opponents(New_Board).
