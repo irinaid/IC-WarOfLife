@@ -58,6 +58,13 @@ max_moves([[N, _, R1, C1, R2, C2], [M, _, R21, C21, R22, C22] | T], Res) :-
   (N > M) -> max_moves([[N, _, R1, C1, R2, C2] | T], Res);
               max_moves([[M, _, R21, C21, R22, C22] | T], Res).
 
+diff_moves([], []).
+diff_moves([[_, _, R1, C1, R2, C2]], [R1, C1, R2, C2]).
+diff_moves([[Curr1, Other1, R1, C1, R2, C2], [Curr2, Other2, R21, C21, R22, C22] | T], Res) :-
+  ((Curr1 - Other1) > (Curr2 - Other2)) ->
+    diff_moves([[Curr1, Other1, R1, C1, R2, C2] | T], Res);
+    diff_moves([[Curr2, Other2, R21, C21, R22, C22] | T], Res).
+
 possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
   findall([X, Y, NewX, NewY],
          (member([X,Y], CurrentPlayer),
@@ -99,9 +106,10 @@ find_best_move(b, [B, R], Strategy, Best_Move) :-
 
 eval_move(Counted_Moves, Best_Move, bldlust) :-
   min_moves(Counted_Moves, Best_Move).
-eval_move(Counted_Moves, Best_Move, lndgrab).
 eval_move(Counted_Moves, Best_Move, selfpres) :-
   max_moves(Counted_Moves, Best_Move).
+eval_move(Counted_Moves, Best_Move, lndgrab).
+  diff_moves(Counted_Moves, Best_Move).
 
 bloodlust(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
   find_best_move(r, [B, R], bldlust, [R1, C1, R2, C2]),
@@ -119,6 +127,13 @@ selfpreservation(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
   find_best_move(b, [B, R], selfpres, [R1, C1, R2, C2]),
   alter_board([R1, C1, R2, C2], B, NewB).
 
+landgrab(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
+  find_best_move(r, [B, R], lndgrab, [R1, C1, R2, C2]),
+  alter_board([R1, C1, R2, C2], R, NewR).
+
+landgrab(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
+  find_best_move(b, [B, R], lndgrab, [R1, C1, R2, C2]),
+  alter_board([R1, C1, R2, C2], B, NewB).
 
 %% SKELETON DESIGN OF ALGORITHM FOR STRATEGIES
 %blood_lust(Board, Best_Move) :-
