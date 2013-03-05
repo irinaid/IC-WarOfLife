@@ -44,6 +44,14 @@ in_range(Min,Max,N) :-
    in_range(MinX,Max,N).
 
 
+forall(P, Q) :- \+ ( call(P), \+ call(Q) ).
+
+min_moves([], []). 
+min_moves([[_, R1, C1, R2, C2]], [R1, C1, R2, C2]).
+min_moves([[N, R1, C1, R2, C2], [M, R21, C21, R22, C22] | T], Res) :-
+  (N < M) -> min_moves([[N, R1, C1, R2, C2] | T], Res); 
+              min_moves([[M, R21, C21, R22, C22] | T], Res).
+
 possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
   findall([X, Y, NewX, NewY],
          (member([X,Y], CurrentPlayer),
@@ -52,66 +60,42 @@ possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
           neighbour_position(X, Y, [NewX, NewY]),
           \+ member([NewX, NewY], CurrentPlayer),
           \+ member([NewX, NewY], OtherPlayer)
-       %   alter_board([X, Y, NewX, NewY], [B, R], IntBoard),
-       %  next_generation(IntBoard, [NewB, _]),
-       %  length(NewB, N)
          ),
           Moves).
 
-find_best_move(r, [B, R], Moves, Best_Move) :-
+find_best_move(r, [B, R], Best_Move) :-
   possible_moves(R, B, Moves),
-  forall( 
-         member([X, Y, NewX, NewY], Moves),
-         (
-          member([N, X, Y, NewX, NewY], Best_Move),
-          alter_board([X, Y, NewX, NewY], [B, R], IntBoard),
-          next_generation(IntBoard, [NewB, _]),
-          length(NewB, N)
-         )
-        ).
-%  min_moves(MovesLengths, Best_Move).
+  findall( 
+    [N, X, Y, NewX, NewY], 
+    ( member([X, Y, NewX, NewY], Moves),
+      alter_board([X, Y, NewX, NewY], R, IntR), 
+      next_generation([B, IntR], [NewB, _]), 
+      length(NewB, N)
+    ),
+    Counted_Moves
+  ),
+  min_moves(Counted_Moves, Best_Move).
 
-forall(P, Q) :- \+ ( call(P), \+ call(Q) ).
+find_best_move(b, [B, R], Best_Move) :-
+  possible_moves(B, R, Moves),
+  findall(
+    [N, X, Y, NewX, NewY],
+    ( member([X, Y, NewX, NewY], Moves),
+      alter_board([X, Y, NewX, NewY], B, IntB),
+      next_generation([IntB, R], [_, NewR]),
+      length(NewR, N)
+    ),
+    Counted_Moves
+  ),
+  min_moves(Counted_Moves, Best_Move).
 
-/*
-for_all( List<Moves> moves, List<(Score,Move)> scoredMoves)
-{
-	while(move[i++] != end of list)
-	{
-		score = assess(move[i]);
-		scoredMoves.add((score, move[i]));
-	}
-	
-}
-*/
-/*
-move(OldPos, NewPos, [B, R], [B, NewR]) :-
-  member(OldPos, R),
-  delete(R, OldPos, IntermediateR),
-  append([NewPos], IntermediateR, NewR).
-move(OldPos, NewPos, [B, R], [NewB, R]) :-
-  member(OldPos, B),
-  delete(B, OldPos, IntermediateB),
-  append([NewPos], IntermediateB, NewB).
-*/
-bloodlust(r, [B, R], [NewB, NewR], [R1, C1, R2, C2]) :-
-  setof([N, R1, C1, R2, C2],
-         (member([R1, C1, R2, C2], PossMoves),
-          possible_moves(R, B, PossMoves),
-          alter_board([R1, C1, R2, C2], [B, R], IntBoard),
-          next_generation(IntBoard, [NB, _]),
-          N = length(NB)
-         ),
-        List),
-  move([X, Y], [NewX, NewY], [B, R], [NewB, NewR]),
-  last(List,[_, X, Y, NewX, NewY]).
-
-min_moves([], []). 
-min_moves([[_, R1, C1, R2, C2]], [R1, C1, R2, C2]).
-min_moves([[N, R1, C1, R2, C2], [M, R21, C21, R22, C22] | T], Res) :-
-  (N < M) -> min_moves([[N, R1, C1, R2, C2] | T], Res); 
-              min_moves([[M, R21, C21, R22, C22] | T], Res).
-
+bloodlust(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
+  find_best_move(r, [B, R], [R1, C1, R2, C2]),
+  alter_board([R1, C1, R2, C2], R, NewR).
+        
+bloodlust(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
+  find_best_move(b, [B, R], [R1, C1, R2, C2]),
+  alter_board([R1, C1, R2, C2], B, NewB).
 
 %% SKELETON DESIGN OF ALGORITHM FOR STRATEGIES
 %blood_lust(Board, Best_Move) :-
