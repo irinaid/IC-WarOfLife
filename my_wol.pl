@@ -99,9 +99,9 @@ find_best_move(b, [B, R], Strategy, Best_Move) :-
 
 eval_move(Counted_Moves, Best_Move, bldlust) :-
   min_moves(Counted_Moves, Best_Move).
-eval_move(Counted_Moves, Best_Move, lndgrab) :-
+eval_move(Counted_Moves, Best_Move, lndgrab).
+eval_move(Counted_Moves, Best_Move, selfpres) :-
   max_moves(Counted_Moves, Best_Move).
-eval_move(Counted_Moves, Best_Move, selfpres).
 
 bloodlust(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
   find_best_move(r, [B, R], bldlust, [R1, C1, R2, C2]),
@@ -111,12 +111,12 @@ bloodlust(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
   find_best_move(b, [B, R], bldlust, [R1, C1, R2, C2]),
   alter_board([R1, C1, R2, C2], B, NewB).
 
-landgrab(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
-  find_best_move(r, [B, R], lndgrab, [R1, C1, R2, C2]),
+selfpreservation(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
+  find_best_move(r, [B, R], selfpres, [R1, C1, R2, C2]),
   alter_board([R1, C1, R2, C2], R, NewR).
         
-landgrab(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
-  find_best_move(b, [B, R], lndgrab, [R1, C1, R2, C2]),
+selfpreservation(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
+  find_best_move(b, [B, R], selfpres, [R1, C1, R2, C2]),
   alter_board([R1, C1, R2, C2], B, NewB).
 
 
