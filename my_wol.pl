@@ -65,6 +65,16 @@ diff_moves([[Curr1, Other1, R1, C1, R2, C2], [Curr2, Other2, R21, C21, R22, C22]
     diff_moves([[Curr1, Other1, R1, C1, R2, C2] | T], Res);
     diff_moves([[Curr2, Other2, R21, C21, R22, C22] | T], Res).
 
+player_pieces(r, [B, R], R).
+player_pieces(b, [B, R], B).
+
+opponent(r, b).
+opponent(b, r).
+
+opp_pieces(P, Board, Pieces) :- 
+  player_pieces(opponent(P), Board, Pieces).
+
+
 possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
   findall([X, Y, NewX, NewY],
          (member([X,Y], CurrentPlayer),
