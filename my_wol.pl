@@ -65,8 +65,8 @@ diff_moves([[Curr1, Other1, R1, C1, R2, C2], [Curr2, Other2, R21, C21, R22, C22]
     diff_moves([[Curr1, Other1, R1, C1, R2, C2] | T], Res);
     diff_moves([[Curr2, Other2, R21, C21, R22, C22] | T], Res).
 
-player_pieces(r, [B, R], R).
-player_pieces(b, [B, R], B).
+player_pieces(r, [_, R], R).
+player_pieces(b, [B, _], B).
 
 opponent(r, b).
 opponent(b, r).
@@ -74,17 +74,31 @@ opponent(b, r).
 opp_pieces(P, Board, Pieces) :- 
   player_pieces(opponent(P), Board, Pieces).
 
+% Adapter for call to next_generation when the player is unknown in the
+% function call 
+next_gen(b, [P1, P2], [B, R]) :-
+  next_generation([P1, P2], [B, R]).
+next_gen(r, [P1, P2], [B, R]) :-
+  next_generation([P2, P1], [R, B]).
+
+intermediary_board(r, NewPieces, [B, _], [B, NewPieces]).
+intermediary_board(b, NewPieces, [_, R], [NewPieces, R]).
+
+alter_brd(P, [R1, C1, R2, C2], Board, NewBoard) :-
+  player_pieces(P, Board, PlayerPieces),
+  alter_board([R1, C1, R2, C2], PlayerPieces, NewPlayerPieces),
+  intermediary_board(P, NewPlayerPieces, Board, NewBoard).
 
 possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
   findall([X, Y, NewX, NewY],
-         (member([X,Y], CurrentPlayer),
-          in_range(1, 8, NewX),
-          in_range(1, 8, NewY),
-          neighbour_position(X, Y, [NewX, NewY]),
-          \+ member([NewX, NewY], CurrentPlayer),
-          \+ member([NewX, NewY], OtherPlayer)
-         ),
-          Moves).
+    (member([X,Y], CurrentPlayer),
+     in_range(1, 8, NewX),
+     in_range(1, 8, NewY),
+     neighbour_position(X, Y, [NewX, NewY]),
+     \+ member([NewX, NewY], CurrentPlayer),
+     \+ member([NewX, NewY], OtherPlayer)
+    ),
+    Moves).
 
 eval_move(Counted_Moves, Best_Move, bldlust) :-
   min_moves(Counted_Moves, Best_Move).
@@ -93,29 +107,17 @@ eval_move(Counted_Moves, Best_Move, selfpres) :-
 eval_move(Counted_Moves, Best_Move, lndgrab) :-
   diff_moves(Counted_Moves, Best_Move).
 
-bloodlust(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
-  find_best_move(r, [B, R], bldlust, [R1, C1, R2, C2]),
-  alter_board([R1, C1, R2, C2], R, NewR).
-        
-bloodlust(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
-  find_best_move(b, [B, R], bldlust, [R1, C1, R2, C2]),
-  alter_board([R1, C1, R2, C2], B, NewB).
+bloodlust(P, Board, NewBoard, [R1, C1, R2, C2]) :-
+  find_best_move(P, Board, bldlust, [R1, C1, R2, C2]),
+  alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).        
+  
+selfpreservation(P, Board, NewBoard, [R1, C1, R2, C2]) :-
+  find_best_move(r, Board, selfpres, [R1, C1, R2, C2]),
+  alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).  
 
-selfpreservation(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
-  find_best_move(r, [B, R], selfpres, [R1, C1, R2, C2]),
-  alter_board([R1, C1, R2, C2], R, NewR).
-        
-selfpreservation(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
-  find_best_move(b, [B, R], selfpres, [R1, C1, R2, C2]),
-  alter_board([R1, C1, R2, C2], B, NewB).
-
-landgrab(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
-  find_best_move(r, [B, R], lndgrab, [R1, C1, R2, C2]),
-  alter_board([R1, C1, R2, C2], R, NewR).
-
-landgrab(b, [B, R], [NewB, R], [R1, C1, R2, C2]) :-
-  find_best_move(b, [B, R], lndgrab, [R1, C1, R2, C2]),
-  alter_board([R1, C1, R2, C2], B, NewB).
+landgrab(P, Board, NewBoard, [R1, C1, R2, C2]) :-
+  find_best_move(r, Board, lndgrab, [R1, C1, R2, C2]),
+  alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).  
 
 %% SKELETON DESIGN OF ALGORITHM FOR STRATEGIES
 %blood_lust(Board, Best_Move) :-
