@@ -100,12 +100,33 @@ possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
     ),
     Moves).
 
-eval_move(Counted_Moves, Best_Move, bldlust) :-
-  min_moves(Counted_Moves, Best_Move).
-eval_move(Counted_Moves, Best_Move, selfpres) :-
-  max_moves(Counted_Moves, Best_Move).
-eval_move(Counted_Moves, Best_Move, lndgrab) :-
-  diff_moves(Counted_Moves, Best_Move).
+find_best_move(Player, [B, R], Strategy, Best_Move) :-
+  player_pieces(Player, [B, R], P1),
+  opp_pieces(Player, [B, R], P2),
+  possible_moves(P1, P2, Moves),
+  setof( 
+    [Score, X, Y, New_X, New_Y], 
+    ( member([X, Y, New_X, New_Y], Moves),
+      alter_board([X, Y, New_X, New_Y], P1, Int_P1), 
+      next_gen(Player, [Int_P1, P2], [New_P1, New_P2]), 
+      eval_move([New_P1, New_P2], Strategy, Score)       
+    ),
+    Scored_Moves
+  ),
+  head(Scored_Moves).
+
+eval_move([P1, P2], bldlust, Score) :-
+  length(P2, L2),
+  Score is 64 - L2.
+  
+eval_move([P1, P2], selfpres, Score) :-
+  length(P1, L1),
+  Score = L1.
+
+eval_move([P1, P2], lndgrab, Score) :-
+  length(P1, L1),
+  length(P2, L2),
+  Score is L1 - L2.
 
 bloodlust(P, Board, NewBoard, [R1, C1, R2, C2]) :-
   find_best_move(P, Board, bldlust, [R1, C1, R2, C2]),
