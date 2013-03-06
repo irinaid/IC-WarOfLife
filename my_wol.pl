@@ -63,7 +63,7 @@ alter_brd(P, [R1, C1, R2, C2], Board, NewBoard) :-
 
 
 minimax(Player, Board, New_Board, Move) :-
-  minimax_general(Player, 2, 0, Board, [Score|Move]),
+  minimax_general(Player, 2, 0, Board, [_|Move]),
   alter_brd(Player, Move, Board, New_Board).
 
 minimax_general(Player, 1, Turn, Board, Best_Scored_Move) :-
@@ -131,11 +131,11 @@ find_best_move(Player, [B, R], Strategy, Best_Move) :-
   last(Sorted_Moves, Scored_Move), 
   tail(Scored_Move, Best_Move).
 
-eval_move([P1, P2], bldlust, Score) :-
+eval_move([_, P2], bldlust, Score) :-
   length(P2, L2),
   Score is 64 - L2.
   
-eval_move([P1, P2], selfpres, Score) :-
+eval_move([P1, _], selfpres, Score) :-
   length(P1, L1),
   Score = L1.
 
@@ -148,22 +148,11 @@ bloodlust(P, Board, NewBoard, Move) :-
   find_best_move(P, Board, bldlust, Move),
   alter_brd(P, Move, Board, NewBoard).        
   
-selfpreservation(P, Board, NewBoard, Move) :-
+self_preservation(P, Board, NewBoard, Move) :-
   find_best_move(P, Board, selfpres, Move),
   alter_brd(P, Move, Board, NewBoard).  
 
-landgrab(P, Board, NewBoard, Move) :-
-  find_best_move(P, Board, lndgrab, [R1, C1, R2, C2]),
+land_grab(P, Board, NewBoard, Move) :-
+  find_best_move(P, Board, lndgrab, Move),
   alter_brd(P, Move, Board, NewBoard).  
 
-%% SKELETON DESIGN OF ALGORITHM FOR STRATEGIES
-%blood_lust(Board, Best_Move) :-
-%    find_best_move(Board, blood_lust_assess_move, Best_Move).
-
-%find_best_move(Board, assess_move_function, Best_Move) :-
-%    setof((Score, Move), assess_move_function(Board,Move,Score),Result),
-%    Best_Move = get_head(Result).
-
-%blood_lust_assess_move(Board, Move, Score) :-
-%    make_move(Board, Move, New_Board),
-%    Score is 64 - number_of_opponents(New_Board).
