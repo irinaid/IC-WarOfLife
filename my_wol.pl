@@ -65,6 +65,16 @@ diff_moves([[Curr1, Other1, R1, C1, R2, C2], [Curr2, Other2, R21, C21, R22, C22]
     diff_moves([[Curr1, Other1, R1, C1, R2, C2] | T], Res);
     diff_moves([[Curr2, Other2, R21, C21, R22, C22] | T], Res).
 
+player_pieces(r, [B, R], R).
+player_pieces(b, [B, R], B).
+
+opponent(r, b).
+opponent(b, r).
+
+opp_pieces(P, Board, Pieces) :- 
+  player_pieces(opponent(P), Board, Pieces).
+
+
 possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
   findall([X, Y, NewX, NewY],
          (member([X,Y], CurrentPlayer),
@@ -75,34 +85,6 @@ possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
           \+ member([NewX, NewY], OtherPlayer)
          ),
           Moves).
-
-find_best_move(r, [B, R], Strategy, Best_Move) :-
-  possible_moves(R, B, Moves),
-  findall( 
-    [CurrN, OtherN, X, Y, NewX, NewY], 
-    ( member([X, Y, NewX, NewY], Moves),
-      alter_board([X, Y, NewX, NewY], R, IntR), 
-      next_generation([B, IntR], [NewB, NewR]), 
-      length(NewB, OtherN), 
-      length(NewR, CurrN)
-    ),
-    Counted_Moves
-  ),
-  eval_move(Counted_Moves, Best_Move, Strategy).
-
-find_best_move(b, [B, R], Strategy, Best_Move) :-
-  possible_moves(B, R, Moves),
-  findall(
-    [CurrN, OtherN, X, Y, NewX, NewY],
-    ( member([X, Y, NewX, NewY], Moves),
-      alter_board([X, Y, NewX, NewY], B, IntB),
-      next_generation([IntB, R], [NewB, NewR]),
-      length(NewR, OtherN),
-      length(NewB, CurrN)
-    ),
-    Counted_Moves
-  ),  
-  eval_move(Counted_Moves, Best_Move, Strategy).
 
 eval_move(Counted_Moves, Best_Move, bldlust) :-
   min_moves(Counted_Moves, Best_Move).
