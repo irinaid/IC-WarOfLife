@@ -26,7 +26,7 @@ test_strategy_helper(N, Cnt, S1, S2, W1, W2, D, LM, SM, Sum_Mov, Sum_Time) :-
     New_W2 is (Upd_W2 + W2),
     New_D is (Upd_D + D),
     ((Moves < SM) -> (New_SM is Moves); (New_SM is SM)),
-    ((Moves > LM) -> (New_LM is Moves);(New_LM is LM)),
+    ((Moves > LM) -> (New_LM is Moves); (New_LM is LM)),
     New_Sum_Mov is (Sum_Mov + Moves),
     New_Cnt is (Cnt - 1),
     test_strategy_helper(N,New_Cnt,S1,S2,New_W1,New_W2,New_D,New_LM,New_SM, New_Sum_Mov, New_Sum_Time).
@@ -52,6 +52,36 @@ opponent(b, r).
 opp_pieces(P, Board, Pieces) :- 
   opponent(P, Opp),
   player_pieces(Opp, Board, Pieces).
+
+flip(1, 0).
+flip(0, 1).
+
+minimax(Player, Board, New_Board, Move) :-
+  minimax_general(Player, 2, 0, Board, [Score|Move]),
+  alter_brd(Player, Move, Board, New_Board).
+
+minimax_general(Player, 1, Turn, Board, Best_Scored_Move) :-
+  score_all_moves(Player, Board, lndgrab, Scored_Moves),
+  ((Turn == 1) -> last(Scored_Moves, Best_Scored_Move); head(Scored_Moves, Best_Scored_Move)).  
+minimax_general(Player, Depth, Turn, Board, Best_Scored_Move) :-
+  player_pieces(Player, Board, P1),
+  opp_pieces(Player, Board, P2),
+  possible_moves(P1, P2, Moves).
+  New_Depth is Depth - 1,
+  flip(Turn, New_Turn),
+  findall( 
+    [Chosen_Scored_Move, New_Board], 
+    ( member(Move, Moves),
+      alter_brd(Player, Move, Board, Board_Before_Crank), 
+      next_generation(Board_Before_Crank, New_Board), 
+      minimax_general(Player, New_Depth, New_Turn, New_Board, Chosen_Scored_Move)
+    ),
+    Moves_And_Boards
+  ),
+  sort(Moves_And_Boards, Sorted_Moves_And_Boards),
+  ((Turn == 0) -> last(Sorted_Moves_And_Boards, Scored_Move_Board); head(Sorted_Moves_And_Boards, Scored_Move_Board)),
+  head(Scored_Move_Board, Best_Scored_Move).
+   
 
 % Adapter for call to next_generation when the player is unknown in the
 % function call 
@@ -79,7 +109,7 @@ possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
     ),
     Moves).
 
-find_best_move(Player, [B, R], Strategy, Best_Move) :-
+score_all_moves(Player, [B, R], Strategy, Scored_Moves) :-
   player_pieces(Player, [B, R], P1),
   opp_pieces(Player, [B, R], P2),
   possible_moves(P1, P2, Moves),
@@ -90,9 +120,12 @@ find_best_move(Player, [B, R], Strategy, Best_Move) :-
       next_gen(Player, [Int_P1, P2], [New_P1, New_P2]), 
       eval_move([New_P1, New_P2], Strategy, Score)       
     ),
-    Scored_Moves    
+    Scored_Moves_Unordered    
   ),
-  sort(Scored_Moves, Sorted_Moves), 
+  sort(Scored_Moves_Unordered, Scored_Moves). 
+
+find_best_move(Player, [B, R], Strategy, Best_Move) :-
+  score_all_moves(Player, [B, R], Strategy, Sorted_Moves),
   last(Sorted_Moves, Scored_Move), 
   tail(Scored_Move, Best_Move).
 
@@ -114,7 +147,7 @@ bloodlust(P, Board, NewBoard, [R1, C1, R2, C2]) :-
   alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).        
   
 selfpreservation(P, Board, NewBoard, [R1, C1, R2, C2]) :-
-  find_best_move(P, Board, selfpres, [R1, C1, R2, C2]).
+  find_best_move(P, Board, selfpres, [R1, C1, R2, C2]),
   alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).  
 
 landgrab(P, Board, NewBoard, [R1, C1, R2, C2]) :-
