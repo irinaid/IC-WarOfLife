@@ -56,18 +56,25 @@ opp_pieces(P, Board, Pieces) :-
 flip(1, 0).
 flip(0, 1).
 
+alter_brd(P, [R1, C1, R2, C2], Board, NewBoard) :-
+  player_pieces(P, Board, PlayerPieces),
+  alter_board([R1, C1, R2, C2], PlayerPieces, NewPlayerPieces),
+  intermediary_board(P, NewPlayerPieces, Board, NewBoard).
+
+
 minimax(Player, Board, New_Board, Move) :-
   minimax_general(Player, 2, 0, Board, [Score|Move]),
   alter_brd(Player, Move, Board, New_Board).
 
 minimax_general(Player, 1, Turn, Board, Best_Scored_Move) :-
   score_all_moves(Player, Board, lndgrab, Scored_Moves),
-  ((Turn == 1) -> last(Scored_Moves, Best_Scored_Move); head(Scored_Moves, Best_Scored_Move)).  
+  ((Turn == 0) -> last(Scored_Moves, Best_Scored_Move); head(Scored_Moves, Best_Scored_Move)).  
 minimax_general(Player, Depth, Turn, Board, Best_Scored_Move) :-
   player_pieces(Player, Board, P1),
   opp_pieces(Player, Board, P2),
-  possible_moves(P1, P2, Moves).
+  possible_moves(P1, P2, Moves),
   New_Depth is Depth - 1,
+  New_Depth > 0, 
   flip(Turn, New_Turn),
   findall( 
     [Chosen_Scored_Move, New_Board], 
@@ -92,11 +99,6 @@ next_gen(r, [P1, P2], [B, R]) :-
 
 intermediary_board(r, NewPieces, [B, _], [B, NewPieces]).
 intermediary_board(b, NewPieces, [_, R], [NewPieces, R]).
-
-alter_brd(P, [R1, C1, R2, C2], Board, NewBoard) :-
-  player_pieces(P, Board, PlayerPieces),
-  alter_board([R1, C1, R2, C2], PlayerPieces, NewPlayerPieces),
-  intermediary_board(P, NewPlayerPieces, Board, NewBoard).
 
 possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
   findall([X, Y, NewX, NewY],
@@ -142,17 +144,17 @@ eval_move([P1, P2], lndgrab, Score) :-
   length(P2, L2),
   Score is L1 - L2.
 
-bloodlust(P, Board, NewBoard, [R1, C1, R2, C2]) :-
-  find_best_move(P, Board, bldlust, [R1, C1, R2, C2]),
-  alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).        
+bloodlust(P, Board, NewBoard, Move) :-
+  find_best_move(P, Board, bldlust, Move),
+  alter_brd(P, Move, Board, NewBoard).        
   
-selfpreservation(P, Board, NewBoard, [R1, C1, R2, C2]) :-
-  find_best_move(P, Board, selfpres, [R1, C1, R2, C2]),
-  alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).  
+selfpreservation(P, Board, NewBoard, Move) :-
+  find_best_move(P, Board, selfpres, Move),
+  alter_brd(P, Move, Board, NewBoard).  
 
-landgrab(P, Board, NewBoard, [R1, C1, R2, C2]) :-
+landgrab(P, Board, NewBoard, Move) :-
   find_best_move(P, Board, lndgrab, [R1, C1, R2, C2]),
-  alter_brd(P, [R1, C1, R2, C2], Board, NewBoard).  
+  alter_brd(P, Move, Board, NewBoard).  
 
 %% SKELETON DESIGN OF ALGORITHM FOR STRATEGIES
 %blood_lust(Board, Best_Move) :-
