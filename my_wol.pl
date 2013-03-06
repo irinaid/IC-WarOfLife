@@ -108,7 +108,7 @@ eval_move(Counted_Moves, Best_Move, bldlust) :-
   min_moves(Counted_Moves, Best_Move).
 eval_move(Counted_Moves, Best_Move, selfpres) :-
   max_moves(Counted_Moves, Best_Move).
-eval_move(Counted_Moves, Best_Move, lndgrab).
+eval_move(Counted_Moves, Best_Move, lndgrab) :-
   diff_moves(Counted_Moves, Best_Move).
 
 bloodlust(r, [B, R], [B, NewR], [R1, C1, R2, C2]) :-
