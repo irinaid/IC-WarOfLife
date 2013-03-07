@@ -67,12 +67,12 @@ minimax(Player, Board, New_Board, Move) :-
   minimax_general(Player, 2, 0, Board, _ , Move),
   alter_brd(Player, Move, Board, New_Board).
 
-minimax_general(Player, 1, Turn, Board, Score, Best_Scored_Move) :-
-  score_all_moves(Player, Board, lndgrab, Scored_Moves),
+minimax_general(Player, 1, Turn, Board, Score, Best_Move) :-
+  score_all_moves(Player, Turn, Board, lndgrab, Scored_Moves),
   ((Turn == 0) -> last(Scored_Moves, Best_Scored_Move); 
                   head(Scored_Moves, Best_Scored_Move)),
-  head(Best_Scored_Move, Score).  
-
+  head(Best_Scored_Move, Score),  
+  tail(Best_Scored_Move, Best_Move). 
 
 minimax_general(Player, Depth, Turn, Board, Score, Best_Move) :-
   Depth > 1,  
@@ -90,13 +90,12 @@ minimax_general(Player, Depth, Turn, Board, Score, Best_Move) :-
     ),
     Moves_And_Boards
   ),
-
   sort(Moves_And_Boards, Sorted_Moves_And_Boards),
-  ((Turn == 0) -> last(Sorted_Moves_And_Boards, Scored_Move_Board); 
-                  head(Sorted_Moves_And_Boards, Scored_Move_Board)),
-  head(Scored_Move_Board, Best_Scored_Move),
-  head(Best_Scored_Move, Score),
-  head(Best_Scored_Move, Best_Move).
+  ((Turn == 0) -> last(Sorted_Moves_And_Boards, Score_Move_Board); 
+                  head(Sorted_Moves_And_Boards, Score_Move_Board)),
+  head(Score_Move_Board, Score),
+  tail(Score_Move_Board, Move_Board),
+  head(Move_Board, Best_Move).
    
 
 % Adapter for call to next_generation when the player is unknown in the
@@ -120,10 +119,11 @@ possible_moves(CurrentPlayer, OtherPlayer, Moves) :-
     ),
     Moves).
 
-score_all_moves(Player, [B, R], Strategy, Scored_Moves) :-
+score_all_moves(Player, Possible_Moves_For_Opponent, [B, R], Strategy, Scored_Moves) :-
   player_pieces(Player, [B, R], P1),
   opp_pieces(Player, [B, R], P2),
-  possible_moves(P1, P2, Moves),
+  ((Possible_Moves_For_Opponent == 0) -> possible_moves(P1, P2, Moves);
+                                         possible_moves(P2, P1, Moves)),
   findall( 
     [Score, X, Y, New_X, New_Y], 
     ( member([X, Y, New_X, New_Y], Moves),
@@ -136,7 +136,7 @@ score_all_moves(Player, [B, R], Strategy, Scored_Moves) :-
   sort(Scored_Moves_Unordered, Scored_Moves). 
 
 find_best_move(Player, [B, R], Strategy, Best_Move) :-
-  score_all_moves(Player, [B, R], Strategy, Sorted_Moves),
+  score_all_moves(Player, 0, [B, R], Strategy, Sorted_Moves),
   last(Sorted_Moves, Scored_Move), 
   tail(Scored_Move, Best_Move).
 
