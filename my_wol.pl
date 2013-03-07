@@ -34,8 +34,9 @@ test_strategy_helper(N, Cnt, S1, S2, W1, W2, D, LM, SM, Sum_Mov, Sum_Time) :-
 update_score(Winner, B, R, D) :-
     ((Winner == r) -> (R is 1); (R is 0)),
     ((Winner == b) -> (B is 1); (B is 0)),
-    ((Winner == d) -> (D is 1);
-     (Winner == s) -> (D is 1);(D is 0)).
+    ((Winner == draw) -> (D is 1);
+     (Winner == exhaust) -> (D is 1);
+     (Winner == stalemate) -> (D is 1); (D is 0)).
 
 in_range(Min,Max,Min) :- Min =< Max.
 in_range(Min,Max,N) :-
