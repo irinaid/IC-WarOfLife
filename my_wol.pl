@@ -64,31 +64,39 @@ alter_brd(P, [R1, C1, R2, C2], Board, NewBoard) :-
 
 
 minimax(Player, Board, New_Board, Move) :-
-  minimax_general(Player, 2, 0, Board, [_|Move]),
+  minimax_general(Player, 2, 0, Board, _ , Move),
   alter_brd(Player, Move, Board, New_Board).
 
-minimax_general(Player, 1, Turn, Board, Best_Scored_Move) :-
+minimax_general(Player, 1, Turn, Board, Score, Best_Scored_Move) :-
   score_all_moves(Player, Board, lndgrab, Scored_Moves),
-  ((Turn == 0) -> last(Scored_Moves, Best_Scored_Move); head(Scored_Moves, Best_Scored_Move)).  
-minimax_general(Player, Depth, Turn, Board, Best_Scored_Move) :-
+  ((Turn == 0) -> last(Scored_Moves, Best_Scored_Move); 
+                  head(Scored_Moves, Best_Scored_Move)),
+  head(Best_Scored_Move, Score).  
+
+
+minimax_general(Player, Depth, Turn, Board, Score, Best_Move) :-
+  Depth > 1,  
+  New_Depth is Depth - 1,
   player_pieces(Player, Board, P1),
   opp_pieces(Player, Board, P2),
   possible_moves(P1, P2, Moves),
-  New_Depth is Depth - 1,
-  New_Depth > 0, 
   flip(Turn, New_Turn),
   findall( 
-    [Chosen_Scored_Move, New_Board], 
+    [Chosen_Score, Move, New_Board], 
     ( member(Move, Moves),
       alter_brd(Player, Move, Board, Board_Before_Crank), 
       next_generation(Board_Before_Crank, New_Board), 
-      minimax_general(Player, New_Depth, New_Turn, New_Board, Chosen_Scored_Move)
+      minimax_general(Player, New_Depth, New_Turn, New_Board, Chosen_Score, _ )
     ),
     Moves_And_Boards
   ),
+
   sort(Moves_And_Boards, Sorted_Moves_And_Boards),
-  ((Turn == 0) -> last(Sorted_Moves_And_Boards, Scored_Move_Board); head(Sorted_Moves_And_Boards, Scored_Move_Board)),
-  head(Scored_Move_Board, Best_Scored_Move).
+  ((Turn == 0) -> last(Sorted_Moves_And_Boards, Scored_Move_Board); 
+                  head(Sorted_Moves_And_Boards, Scored_Move_Board)),
+  head(Scored_Move_Board, Best_Scored_Move),
+  head(Best_Scored_Move, Score),
+  head(Best_Scored_Move, Best_Move).
    
 
 % Adapter for call to next_generation when the player is unknown in the
