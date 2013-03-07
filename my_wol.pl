@@ -26,7 +26,13 @@ test_strategy_helper(N, Cnt, S1, S2, W1, W2, D, LM, SM, Sum_Mov, Sum_Time) :-
     New_W2 is (Upd_W2 + W2),
     New_D is (Upd_D + D),
     ((Moves < SM) -> (New_SM is Moves); (New_SM is SM)),
-    ((Moves > LM) -> (New_LM is Moves); (New_LM is LM)),
+    (
+     (Moves > LM) -> (
+                      (Winner == exaustive) -> (New_LM is LM);
+                                               (New_LM is Moves)
+                     );
+                     (New_LM is LM)
+    ),
     New_Sum_Mov is (Sum_Mov + Moves),
     New_Cnt is (Cnt - 1),
     test_strategy_helper(N,New_Cnt,S1,S2,New_W1,New_W2,New_D,New_LM,New_SM, New_Sum_Mov, New_Sum_Time).
